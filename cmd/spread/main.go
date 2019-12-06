@@ -8,6 +8,7 @@ import (
 	mrand "math/rand"
 	"os"
 	"os/signal"
+	"os/user"
 	"strings"
 	"time"
 
@@ -50,6 +51,15 @@ func run() error {
 	spread.Logger = log.New(os.Stdout, "", 0)
 	spread.Verbose = *verbose
 	spread.Debug = *vverbose
+
+	if os.Getenv("SNAP") != "" {
+		// the snap runtime overrides HOME, which we don't want
+		cur, err := user.Current()
+		if err != nil {
+			log.Fatal(err)
+		}
+		os.Setenv("HOME", cur.HomeDir)
+	}
 
 	var other bool
 	for _, b := range []bool{*debug, *shell, *shellBefore || *shellAfter, *abend, *restore} {

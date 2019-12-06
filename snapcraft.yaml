@@ -1,5 +1,4 @@
 name: spread
-version: 2018.08.21
 summary: Convenient full-system test (task) distribution
 description: |
     Spread is a plesant way distribute full-system integration tests and
@@ -9,17 +8,38 @@ description: |
     specific to testing. It's a simple way to express what to run and
     where, what to do before and after it runs, and how to duplicate jobs
     with minor variations without copy & paste.
-
+adopt-info: spread
 confinement: strict
 grade: stable
+base: core18
+
+plugs:
+    dot-spread:
+        interface: personal-files
+        write:
+        - $HOME/.spread
+    dot-config-gcloud:
+        interface: personal-files
+        read:
+        - $HOME/.config/gcloud
 
 apps:
     spread:
         command: bin/spread
-        plugs: [home, network, network-bind]
+        plugs: [home, network, network-bind, dot-spread, dot-config-gcloud]
+        adapter: none
 
 parts:
     spread:
         plugin: go
-        go-packages:
-            - github.com/snapcore/spread/cmd/spread
+        build-packages:
+            - gcc
+            - git               # needed to get deps
+        source:
+            .
+        go-importpath: github.com/snapcore/spread
+        override-pull: |
+            # do the usual pull stuff
+            snapcraftctl pull
+            # set the version from today's date
+            snapcraftctl set-version "$(date --rfc-3339=date)"
